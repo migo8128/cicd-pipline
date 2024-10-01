@@ -25,3 +25,5 @@ jobs:
         DB_PORT: ${{ secrets.DB_PORT }}
         DB_HOST: ${{ secrets.DB_HOST }}
       run: sudo docker run -e DB_USER=$DB_USER -e DB_PASSWORD=$DB_PASSWORD -e DB_NAME=$DB_NAME -e DB_PORT=$DB_PORT -e DB_HOST=$DB_HOST -d -p 3000:3000 --name cicd-pipeline-container amagdy9129/cicd-pipeline:latest
+    - name: Check Docker Container Status
+      run: sudo docker ps -a
