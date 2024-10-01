@@ -20,4 +20,6 @@ jobs:
         DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}        
       run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
     - name: Push to Dockerhub
-      run: docker push amagdy9129/cicd-pipeline:latest
+      env:
+        IMAGE_NAME: ${{secrets.DOCKER_USERNAME}}/cicd-pipeline
+      run: docker push $IMAGE_NAME:latest
