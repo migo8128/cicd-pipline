@@ -1,19 +1,31 @@
 const http = require("http");
+const dotenv = require("dotenv");
+dotenv.config();
+const { Pool } = require("pg");
 
-const users = [
-  {
-    name: "John Doe",
-    email: "john@doe.com",
-    age: 20,
+const pool = new Pool({
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT,
+  ssl: {
+    rejectUnauthorized: false,
   },
-  {
-    name: "Ahmed Magdy",
-    email: "hilol@doe.com",
-    age: 21,
-  },
-];
+});
 
-const server = http.createServer((req, res) => {
+const queryDatabase = async () => {
+  try {
+    const result = await pool.query("SELECT NOW()"); // Example query
+    console.log("Connected to PostgreSQL RDS:", result.rows[0]);
+  } catch (err) {
+    console.error("Error connecting to PostgreSQL RDS:", err);
+  }
+};
+
+queryDatabase();
+
+const server = http.createServer(async (req, res) => {
   // Add CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -27,15 +39,28 @@ const server = http.createServer((req, res) => {
   }
 
   if (req.url === "/api/users" && req.method === "GET") {
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "application/json");
-    res.end(JSON.stringify({ users }));
+    const result = await pool.query("SELECT * FROM users");
+    const users = result.rows;
+    if (users.length === 0) {
+      res.statusCode = 404;
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ message: "No users found" }));
+    } else {
+      res.statusCode = 200;
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ users }));
+    }
   } else if (req.url === "/api/users" && req.method === "POST") {
-    const { name, email, age } = JSON.parse(req.body);
-    users.push({ name, email, age });
+    const name = "John Doe";
+    const age = 20;
+    const result = await pool.query(
+      "INSERT INTO users (name, age) VALUES ($1, $2) RETURNING *",
+      [name, age]
+    );
+    const newUser = result.rows[0];
     res.statusCode = 201;
     res.setHeader("Content-Type", "application/json");
-    res.end(JSON.stringify({ users }));
+    res.end(JSON.stringify({ newUser }));
   } else if (req.url === "/" && req.method === "GET") {
     res.statusCode = 200;
     res.setHeader("Content-Type", "application/json");
