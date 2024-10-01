@@ -13,7 +13,6 @@ const users = [
   },
 ];
 
-console.log("hello there");
 const server = http.createServer((req, res) => {
   // Add CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
